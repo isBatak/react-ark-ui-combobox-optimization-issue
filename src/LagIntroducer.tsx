@@ -1,39 +1,35 @@
-import { useState, useEffect, useRef } from "react";
-import { Slider } from "~/components/ui/slider";
+import { useState, useEffect } from "react";
+import { Checkbox } from "~/components/ui/checkbox";
+
+function getRandomLag() {
+  return Math.floor(Math.random() * 300);
+}
 
 export const LagInducer = () => {
+  const [enable, setEnable] = useState(false);
   const [lag, setLag] = useState(0);
-  const lagRef = useRef(lag);
 
   useEffect(() => {
-    lagRef.current = lag;
-  }, [lag]);
+    if (!enable) {
+      return () => {};
+    }
 
-  useEffect(() => {
-    const lagMe = () => {
-      const t1 = lagRef.current + Date.now();
+    const intervalId = setInterval(() => {
+      const t1 = getRandomLag() + Date.now();
+      setLag(t1 - Date.now());
       while (Date.now() < t1); // Induces lag
-      window.requestAnimationFrame(lagMe);
-    };
-
-    const animationId = window.requestAnimationFrame(lagMe);
+    }, getRandomLag()); // Randomize the interval timing
 
     return () => {
-      window.cancelAnimationFrame(animationId);
+      clearInterval(intervalId);
     };
-  }, []);
+  }, [enable]);
 
   return (
     <div id="lagger">
       <label>
-        Induce Lag:
-        <Slider
-          value={[lag]}
-          min={0}
-          max={1000}
-          onValueChange={(value) => setLag(value.value[0])}
-          w="200px"
-        />
+        Induce random Lag:
+        <Checkbox checked={enable} onChange={() => setEnable(!enable)} />
       </label>
       <span id="val">{lag}</span>ms
     </div>
